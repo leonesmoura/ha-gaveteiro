@@ -21,6 +21,16 @@ class ModuleUpdate(BaseModel):
     grid_row: Optional[int] = None
 
 
+class ModuleCreate(BaseModel):
+    name: str
+    rows: int = 4
+    cols: int = 4
+    grid_col: int = 1
+    grid_row: int = 1
+    """Rótulos das novas gavetas; se omitido, continuam a numeração existente."""
+    label_prefix: str = ""
+
+
 class ModuleLayoutItem(BaseModel):
     id: int
     grid_col: int
@@ -35,7 +45,8 @@ class ModuleLayoutIn(BaseModel):
 
 
 class DrawerRename(BaseModel):
-    label: str
+    label: Optional[str] = None
+    description: Optional[str] = None
 
 
 class RenumberIn(BaseModel):
@@ -113,6 +124,7 @@ class DrawerOut(BaseModel):
     row: int
     col: int
     label: str
+    description: str = ""
     total_quantity: int = 0
     part_count: int = 0
     low_stock: bool = False

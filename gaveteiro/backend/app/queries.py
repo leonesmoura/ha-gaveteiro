@@ -78,6 +78,7 @@ def drawer_summaries(session: Session) -> list[DrawerOut]:
                 row=drawer.row,
                 col=drawer.col,
                 label=drawer.label,
+                description=drawer.description,
                 total_quantity=total,
                 part_count=len(entries),
                 low_stock=low,

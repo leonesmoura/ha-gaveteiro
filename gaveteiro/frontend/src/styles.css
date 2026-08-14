@@ -419,6 +419,13 @@ textarea:focus {
   font-size: 13px;
 }
 
+.drawer-description {
+  margin-bottom: 10px;
+  font-size: 13px;
+  background: transparent;
+  border-style: dashed;
+}
+
 .card {
   background: var(--surface-2);
   border: 1px solid var(--border);

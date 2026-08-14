@@ -144,7 +144,15 @@ function DrawerCell({
       type="button"
       className={classes.join(' ')}
       onClick={() => onSelect(drawer)}
-      title={`${drawer.label} — ${drawer.part_count === 0 ? 'vazia' : `${drawer.part_count} peça(s), ${drawer.total_quantity} un.`}`}
+      title={[
+        drawer.label,
+        drawer.description,
+        drawer.part_count === 0
+          ? 'vazia'
+          : `${drawer.part_count} peça(s), ${drawer.total_quantity} un.`,
+      ]
+        .filter(Boolean)
+        .join(' — ')}
       aria-label={`Gaveta ${drawer.label}`}
     >
       {drawer.primary_color && (

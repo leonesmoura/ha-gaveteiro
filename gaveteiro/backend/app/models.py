@@ -38,6 +38,8 @@ class Drawer(SQLModel, table=True):
     row: int
     col: int
     label: str = Field(index=True, unique=True)
+    # Para que serve a gaveta ("Cap. Poliester"), independente do que há nela.
+    description: str = ""
 
     module: Optional[Module] = Relationship(back_populates="drawers")
     stock: list["Stock"] = Relationship(back_populates="drawer")

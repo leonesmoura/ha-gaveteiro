@@ -39,6 +39,7 @@ export interface Drawer {
   row: number
   col: number
   label: string
+  description: string
   total_quantity: number
   part_count: number
   low_stock: boolean

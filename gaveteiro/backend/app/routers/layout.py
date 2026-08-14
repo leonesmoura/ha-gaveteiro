@@ -10,6 +10,7 @@ from ..schemas import (
     DrawerDetail,
     DrawerOut,
     DrawerRename,
+    ModuleCreate,
     ModuleLayoutIn,
     ModuleOut,
     ModuleUpdate,
@@ -33,6 +34,57 @@ def update_module(module_id: int, payload: ModuleUpdate, session: Session = Depe
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(module, field, value)
     session.add(module)
+    session.commit()
+    session.refresh(module)
+    return module
+
+
+@router.post("/modules", response_model=ModuleOut, status_code=201)
+def create_module(payload: ModuleCreate, session: Session = Depends(get_session)):
+    """Cria um módulo e as gavetas dele, continuando a numeração existente."""
+    if payload.rows < 1 or payload.cols < 1:
+        raise HTTPException(400, "O módulo precisa de ao menos uma linha e uma coluna")
+
+    nome = payload.name.strip()
+    if not nome:
+        raise HTTPException(400, "O nome do módulo não pode ficar vazio")
+    if session.exec(select(Module).where(Module.name == nome)).first():
+        raise HTTPException(409, f"Já existe um módulo chamado {nome}")
+
+    ocupado = session.exec(
+        select(Module).where(
+            Module.grid_col == payload.grid_col, Module.grid_row == payload.grid_row
+        )
+    ).first()
+    if ocupado:
+        raise HTTPException(409, f"A posição já é ocupada por {ocupado.name}")
+
+    module = Module(
+        name=nome,
+        rows=payload.rows,
+        cols=payload.cols,
+        grid_col=payload.grid_col,
+        grid_row=payload.grid_row,
+    )
+    session.add(module)
+    session.flush()
+
+    # Continua a numeração: pega o maior rótulo puramente numérico existente.
+    existentes = session.exec(select(Drawer.label)).all()
+    numericos = [int(l) for l in existentes if l.isdigit()]
+    proximo = max(numericos, default=0) + 1
+
+    usados = set(existentes)
+    for row in range(1, payload.rows + 1):
+        for col in range(1, payload.cols + 1):
+            label = f"{payload.label_prefix}{proximo}"
+            while label in usados:
+                proximo += 1
+                label = f"{payload.label_prefix}{proximo}"
+            usados.add(label)
+            session.add(Drawer(module_id=module.id, row=row, col=col, label=label))
+            proximo += 1
+
     session.commit()
     session.refresh(module)
     return module
@@ -132,15 +184,19 @@ def rename_drawer(drawer_id: int, payload: DrawerRename, session: Session = Depe
     if drawer is None:
         raise HTTPException(404, "Gaveta não encontrada")
 
-    label = payload.label.strip()
-    if not label:
-        raise HTTPException(400, "O rótulo não pode ficar vazio")
+    if payload.label is not None:
+        label = payload.label.strip()
+        if not label:
+            raise HTTPException(400, "O rótulo não pode ficar vazio")
 
-    conflito = session.exec(select(Drawer).where(Drawer.label == label)).first()
-    if conflito is not None and conflito.id != drawer_id:
-        raise HTTPException(409, f"Já existe uma gaveta com o rótulo {label}")
+        conflito = session.exec(select(Drawer).where(Drawer.label == label)).first()
+        if conflito is not None and conflito.id != drawer_id:
+            raise HTTPException(409, f"Já existe uma gaveta com o rótulo {label}")
+        drawer.label = label
 
-    drawer.label = label
+    if payload.description is not None:
+        drawer.description = payload.description.strip()
+
     session.add(drawer)
     session.commit()
 

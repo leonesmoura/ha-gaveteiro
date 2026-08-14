@@ -101,6 +101,19 @@ export function DrawerPanel({ drawerId, categories, allParts, onChanged }: Props
         )}
       </div>
 
+      {!renaming && (
+        <input
+          className="drawer-description"
+          defaultValue={detail.description}
+          placeholder="Para que serve esta gaveta? (ex.: Cap. Poliester)"
+          aria-label="Descrição da gaveta"
+          onBlur={(e) => {
+            const texto = e.target.value.trim()
+            if (texto !== detail.description) run(() => api.describeDrawer(drawerId, texto))
+          }}
+        />
+      )}
+
       {error && <div className="error">{error}</div>}
 
       {mode === 'view' && (

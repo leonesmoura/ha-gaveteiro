@@ -77,6 +77,8 @@ export const api = {
   drawer: (id: number) => request<DrawerDetail>(`/drawers/${id}`),
   renameDrawer: (id: number, label: string) =>
     request<Drawer>(`/drawers/${id}`, { method: 'PATCH', body: json({ label }) }),
+  describeDrawer: (id: number, description: string) =>
+    request<Drawer>(`/drawers/${id}`, { method: 'PATCH', body: json({ description }) }),
   renumber: (payload: RenumberInput) =>
     request<Drawer[]>('/drawers/renumber', { method: 'POST', body: json(payload) }),
 
