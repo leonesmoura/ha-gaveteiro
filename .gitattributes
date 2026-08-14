@@ -1,0 +1,6 @@
+# O container é Linux: CRLF quebraria o shebang do run.sh e os scripts.
+* text=auto eol=lf
+*.sh text eol=lf
+*.png binary
+*.jpg binary
+*.webp binary

@@ -1,0 +1,6 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlmodel==0.0.22
+python-multipart==0.0.20
+itsdangerous==2.2.0
+Pillow==11.1.0

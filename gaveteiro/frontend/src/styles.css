@@ -1,0 +1,602 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b1220;
+  --surface: #131c2e;
+  --surface-2: #1b2740;
+  --border: #2a3550;
+  --text: #e6ecf7;
+  --muted: #93a3bf;
+  --accent: #38bdf8;
+  --danger: #f87171;
+  --ok: #34d399;
+  --radius: 10px;
+  /* Largura de uma gaveta. O modo "ajustar à tela" reescreve esta variável. */
+  --drawer-w: 46px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #08131f;
+  font-weight: 600;
+}
+
+button.danger {
+  color: var(--danger);
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* --- layout geral --------------------------------------------------- */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.topbar h1 {
+  font-size: 17px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.topbar .grow {
+  flex: 1;
+  min-width: 200px;
+}
+
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  min-height: 0;
+}
+
+.canvas-wrap {
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.sidepanel {
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* --- modo configuração ---------------------------------------------- */
+
+.config-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--accent);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* As gavetas não abrem enquanto se mexe no arranjo. */
+.cabinet.editing .drawer {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.cabinet.editing .module {
+  border-color: var(--accent);
+}
+
+.module-editor {
+  margin-bottom: 6px;
+}
+
+.module-editor input {
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.module-arrows {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.module-arrows button {
+  padding: 4px 0;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.module-pos {
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* No desktop o botão de fechar e o fundo escuro não existem. */
+.panel-close,
+.panel-backdrop {
+  display: none;
+}
+
+/* --- celular / telas estreitas -------------------------------------- */
+
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+
+  /* O painel vira uma folha sobre o gaveteiro, em vez de espremer a tela. */
+  .sidepanel {
+    position: fixed;
+    z-index: 20;
+    inset: 0;
+    border-left: none;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform 0.2s ease;
+    overscroll-behavior: contain;
+  }
+
+  .sidepanel.open {
+    transform: translateY(0);
+  }
+
+  .panel-backdrop.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: rgba(3, 7, 18, 0.6);
+  }
+
+  .panel-close {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    text-align: left;
+    padding: 10px 12px;
+  }
+
+  .canvas-wrap {
+    padding: 12px;
+    justify-content: flex-start;
+  }
+
+  .topbar {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .topbar h1 {
+    font-size: 15px;
+  }
+
+  /* A busca ocupa a linha inteira; os botões dividem a seguinte. */
+  .topbar .grow {
+    flex: 1 0 100%;
+    order: 3;
+    min-width: 0;
+  }
+
+  .cabinet {
+    gap: 10px;
+  }
+
+  .module {
+    padding: 6px;
+  }
+
+  /* Alvos de toque maiores e sem depender de hover. */
+  .drawer {
+    aspect-ratio: 1.15;
+  }
+
+  .drawer:hover {
+    transform: none;
+  }
+
+  /* Métricas e o botão de sair não cabem: viram menu implícito do HA. */
+  .topbar .hide-mobile {
+    display: none;
+  }
+
+  .module-grid {
+    gap: 3px;
+  }
+
+  .qty-row button {
+    min-width: 44px;
+    padding: 10px 0;
+  }
+
+  .tabs button {
+    padding: 10px 6px;
+  }
+
+  input,
+  select,
+  textarea {
+    /* iOS dá zoom automático em campos com fonte menor que 16px. */
+    font-size: 16px;
+  }
+}
+
+/* --- gaveteiro ------------------------------------------------------ */
+
+.cabinet {
+  display: grid;
+  gap: 14px;
+}
+
+.module {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+}
+
+.module-name {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.module-grid {
+  display: grid;
+  gap: 4px;
+}
+
+.drawer {
+  position: relative;
+  aspect-ratio: 1.35;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px;
+  cursor: pointer;
+  transition: transform 0.08s ease, border-color 0.12s ease;
+}
+
+.drawer:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.drawer .qty {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.drawer .name {
+  font-size: 9px;
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer.empty .qty {
+  color: #46536e;
+  font-weight: 400;
+}
+
+.drawer.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}
+
+.drawer.match {
+  border-color: var(--ok);
+  box-shadow: 0 0 0 2px var(--ok) inset;
+}
+
+.drawer.dimmed {
+  opacity: 0.25;
+}
+
+.drawer .low-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.drawer .stripe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 6px 0 0 6px;
+}
+
+/* --- painel lateral ------------------------------------------------- */
+
+.panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.entry {
+  display: flex;
+  gap: 10px;
+}
+
+.thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+
+.thumb.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 20px;
+}
+
+.entry-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-title {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.qty-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.qty-row input {
+  width: 76px;
+  text-align: center;
+}
+
+.qty-row button {
+  min-width: 34px;
+  padding: 6px 0;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.badge-low {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+.movement {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.movement:last-child {
+  border-bottom: none;
+}
+
+.delta-pos {
+  color: var(--ok);
+  font-variant-numeric: tabular-nums;
+}
+
+.delta-neg {
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tabs button {
+  flex: 1;
+}
+
+.tabs button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* --- login ---------------------------------------------------------- */
+
+.login-wrap {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.login-card {
+  width: min(360px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.empty-state {
+  color: var(--muted);
+  text-align: center;
+  padding: 32px 12px;
+}
+
+button.link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.ok-msg {
+  color: var(--ok);
+  font-size: 13px;
+}
+
+.preview {
+  margin: 0;
+  font: 12px/1.5 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  color: var(--text);
+  white-space: pre;
+  overflow-x: auto;
+}
