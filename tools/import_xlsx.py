@@ -299,6 +299,55 @@ class Importador:
             self.preencher(gaveta["id"], extra.nome, extra.itens, extra.titulo)
 
 
+def montar_plano(gavetas: list[GavetaImportada], extras: list[GavetaExtra], args) -> dict:
+    """Formato aceito por POST /api/import."""
+
+    def itens(base: str, lista: list[Item], origem: str) -> list[dict]:
+        categoria = categoria_de(base)
+        return [
+            {
+                "name": f"{base} {item.texto}".strip(),
+                "value": item.texto,
+                "quantity": item.quantidade,
+                "category": categoria,
+                "notes": f"Importado da planilha ({origem})",
+            }
+            for item in lista
+        ]
+
+    plano: dict = {
+        "drawers": [
+            {
+                "label": str(g.numero),
+                "description": g.nome,
+                "items": itens(g.nome, g.itens, f"gaveta {g.numero}"),
+            }
+            for g in gavetas
+        ],
+        "new_modules": [],
+    }
+
+    if extras:
+        plano["new_modules"].append(
+            {
+                "name": args.modulo_extra,
+                "rows": 1,
+                "cols": len(extras),
+                "grid_col": args.extra_col,
+                "grid_row": args.extra_row,
+                "drawers": [
+                    {
+                        "description": e.nome,
+                        "items": itens(e.nome, e.itens, e.titulo),
+                    }
+                    for e in extras
+                ],
+            }
+        )
+
+    return plano
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("planilha")
@@ -307,6 +356,9 @@ def main() -> int:
     parser.add_argument("--password", default="")
     parser.add_argument("--dry-run", action="store_true", help="só mostra o que seria criado")
     parser.add_argument("--modulo-extra", default="Extras", help="nome do módulo da área Gaveta1/2/3")
+    parser.add_argument("--emit-json", help="grava o plano num arquivo para POST /api/import")
+    parser.add_argument("--extra-col", type=int, default=1, help="coluna do módulo extra no arranjo")
+    parser.add_argument("--extra-row", type=int, default=1, help="linha do módulo extra no arranjo")
     args = parser.parse_args()
 
     linhas = ler_linhas(args.planilha)
@@ -329,6 +381,13 @@ def main() -> int:
         for extra in extras:
             itens = ", ".join(f"{i.texto}({i.quantidade})" for i in extra.itens)
             print(f"  {extra.titulo:>3} {extra.nome:<28} [{categoria_de(extra.nome)}] {itens}")
+        return 0
+
+    if args.emit_json:
+        plano = montar_plano(gavetas, extras, args)
+        with open(args.emit_json, "w", encoding="utf-8") as saida:
+            json.dump(plano, saida, ensure_ascii=False)
+        print(f"Plano gravado em {args.emit_json}")
         return 0
 
     importador = Importador(Cliente(args.url, args.user, args.password))

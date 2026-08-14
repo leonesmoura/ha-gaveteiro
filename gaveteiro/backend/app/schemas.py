@@ -167,6 +167,42 @@ class SearchResult(BaseModel):
     drawer_ids: list[int]
 
 
+class ImportItem(BaseModel):
+    name: str
+    value: str = ""
+    package: str = ""
+    quantity: int = 0
+    category: str = ""
+    notes: str = ""
+
+
+class ImportDrawer(BaseModel):
+    label: str = ""
+    description: str = ""
+    items: list[ImportItem] = []
+
+
+class ImportModule(BaseModel):
+    name: str
+    rows: int = 1
+    cols: int = 1
+    grid_col: int = 1
+    grid_row: int = 1
+    drawers: list[ImportDrawer] = []
+
+
+class ImportIn(BaseModel):
+    drawers: list[ImportDrawer] = []
+    new_modules: list[ImportModule] = []
+
+
+class ImportResult(BaseModel):
+    parts_created: int
+    descriptions_set: int
+    modules_created: int
+    skipped: list[str]
+
+
 class LoginIn(BaseModel):
     username: str
     password: str

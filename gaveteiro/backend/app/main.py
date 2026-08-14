@@ -14,7 +14,7 @@ from sqlmodel import Session
 
 from . import auth, config
 from .db import get_engine, init_db
-from .routers import auth_routes, layout, parts, search, stock
+from .routers import auth_routes, importer, layout, parts, search, stock
 from .seed import seed
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -44,6 +44,7 @@ app.include_router(layout.router, prefix="/api", dependencies=protected)
 app.include_router(parts.router, prefix="/api", dependencies=protected)
 app.include_router(stock.router, prefix="/api", dependencies=protected)
 app.include_router(search.router, prefix="/api", dependencies=protected)
+app.include_router(importer.router, prefix="/api", dependencies=protected)
 
 
 @app.get("/api/images/{filename}")
