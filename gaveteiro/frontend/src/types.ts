@@ -86,7 +86,7 @@ export interface ModuleLayoutItem {
 }
 
 export interface RenumberInput {
-  modo: 'continuo' | 'por_modulo'
+  modo: 'continuo' | 'por_modulo' | 'pares'
   inicio: number
   ordem: 'linha' | 'coluna'
   prefixo: string

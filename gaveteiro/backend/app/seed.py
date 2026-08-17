@@ -74,13 +74,16 @@ def numerar(
       - "por_modulo": cada módulo recebe um bloco contínuo seguindo o número
         do módulo (M1 = 1-16, M2 = 17-32, … M12 = 177-192), independente de
         onde ele esteja no arranjo.
+      - "pares": os módulos são tomados aos pares na ordem do número
+        (M1/M2, M3/M4, …) e a linha atravessa os dois módulos do par, de modo
+        que cada par consome 32 gavetas: M1/M2 = 1-32, M3/M4 = 33-64, etc.
 
     ordem: "linha" (esquerda→direita, cima→baixo) ou "coluna" (cima→baixo,
     coluna por coluna).
 
     prefixo: texto opcional antes do número, ex.: "G" gera G1, G2, G3…
     """
-    if modo not in {"continuo", "por_modulo"}:
+    if modo not in {"continuo", "por_modulo", "pares"}:
         raise ValueError(f"Modo desconhecido: {modo}")
     if ordem not in {"linha", "coluna"}:
         raise ValueError(f"Ordem desconhecida: {ordem}")
@@ -93,6 +96,34 @@ def numerar(
             for row, col in _celulas(module, ordem):
                 resultado.append((module, row, col, f"{prefixo}{numero}"))
                 numero += 1
+        return resultado
+
+    if modo == "pares":
+        # Módulos aos pares na ordem do número (M1/M2, M3/M4, …), e dentro do
+        # par a linha atravessa os dois: M1 leva 1-4 e o M2 continua em 5-8.
+        # Independe de onde o par esteja no arranjo físico.
+        naturais = sorted(modules, key=ordem_natural)
+        for i in range(0, len(naturais), 2):
+            par = naturais[i : i + 2]
+            alturas = {m.rows for m in par}
+            if len(alturas) != 1:
+                raise ValueError(
+                    f"O par {'/'.join(m.name for m in par)} tem alturas diferentes "
+                    f"{alturas}; a numeração em pares exige mesma quantidade de linhas."
+                )
+
+            if ordem == "coluna":
+                for module in par:
+                    for col in range(1, module.cols + 1):
+                        for row in range(1, module.rows + 1):
+                            resultado.append((module, row, col, f"{prefixo}{numero}"))
+                            numero += 1
+            else:
+                for row in range(1, par[0].rows + 1):
+                    for module in par:
+                        for col in range(1, module.cols + 1):
+                            resultado.append((module, row, col, f"{prefixo}{numero}"))
+                            numero += 1
         return resultado
 
     # Contínuo: percorre linha física de módulos por linha física de módulos.

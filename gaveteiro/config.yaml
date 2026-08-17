@@ -1,5 +1,5 @@
 ﻿name: Gaveteiro
-version: "1.3.0"
+version: "1.4.0"
 slug: gaveteiro
 description: Controle de estoque de componentes eletrônicos com gaveteiro interativo
 url: https://github.com/leonesmoura/ha-gaveteiro

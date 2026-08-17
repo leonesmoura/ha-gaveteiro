@@ -16,7 +16,7 @@ interface Props {
  */
 export function NumberingPanel({ modules, drawers, onChanged }: Props) {
   const [form, setForm] = useState<RenumberInput>({
-    modo: 'continuo',
+    modo: 'pares',
     inicio: 1,
     ordem: 'linha',
     prefixo: '',
@@ -55,8 +55,9 @@ export function NumberingPanel({ modules, drawers, onChanged }: Props) {
           value={form.modo}
           onChange={(e) => setForm({ ...form, modo: e.target.value as RenumberInput['modo'] })}
         >
-          <option value="continuo">Contínuo pela linha física (atravessa os módulos)</option>
+          <option value="pares">Aos pares (M1/M2 = 1-32, M3/M4 = 33-64…)</option>
           <option value="por_modulo">Bloco por módulo (M1 = 1-16, M2 = 17-32…)</option>
+          <option value="continuo">Contínuo pela linha física do gaveteiro</option>
         </select>
       </div>
 
@@ -127,6 +128,18 @@ function previewLabels(modules: Module[], form: RenumberInput): string {
 
   if (form.modo === 'por_modulo') {
     for (const m of porNumero) percorrer(m, form.ordem, (row, col) => marcar(m.id, row, col))
+  } else if (form.modo === 'pares') {
+    for (let i = 0; i < porNumero.length; i += 2) {
+      const par = porNumero.slice(i, i + 2)
+      if (form.ordem === 'coluna') {
+        for (const m of par)
+          for (let col = 1; col <= m.cols; col++)
+            for (let row = 1; row <= m.rows; row++) marcar(m.id, row, col)
+      } else {
+        for (let row = 1; row <= par[0].rows; row++)
+          for (const m of par) for (let col = 1; col <= m.cols; col++) marcar(m.id, row, col)
+      }
+    }
   } else {
     for (const grid_row of [...new Set(porPosicao.map((m) => m.grid_row))]) {
       const naLinha = porPosicao.filter((m) => m.grid_row === grid_row)
@@ -141,7 +154,7 @@ function previewLabels(modules: Module[], form: RenumberInput): string {
     }
   }
 
-  return (form.modo === 'por_modulo' ? porNumero : porPosicao)
+  return (form.modo === 'continuo' ? porPosicao : porNumero)
     .slice(0, 2)
     .map((m) => {
       const linhas: string[] = []
