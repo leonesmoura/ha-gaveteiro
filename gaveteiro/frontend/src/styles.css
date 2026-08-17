@@ -1,17 +1,44 @@
+/* Cores próprias, usadas fora do Home Assistant. Sob o Ingress, theme.ts
+   sobrescreve estas variáveis com as do tema do HA. */
 :root {
-  color-scheme: dark;
-  --bg: #0b1220;
-  --surface: #131c2e;
-  --surface-2: #1b2740;
-  --border: #2a3550;
-  --text: #e6ecf7;
-  --muted: #93a3bf;
-  --accent: #38bdf8;
-  --danger: #f87171;
-  --ok: #34d399;
+  color-scheme: light dark;
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: #d8e0ea;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #0284c7;
+  --danger: #dc2626;
+  --ok: #059669;
+  --sombra: rgba(15, 23, 42, 0.18);
   --radius: 10px;
   /* Largura de uma gaveta. O modo "ajustar à tela" reescreve esta variável. */
-  --drawer-w: 46px;
+  --drawer-w: 56px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1220;
+    --surface: #131c2e;
+    --surface-2: #1b2740;
+    --border: #2a3550;
+    --text: #e6ecf7;
+    --muted: #93a3bf;
+    --accent: #38bdf8;
+    --danger: #f87171;
+    --ok: #34d399;
+    --sombra: rgba(0, 0, 0, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 * {
@@ -326,58 +353,125 @@ textarea:focus {
 
 .drawer {
   position: relative;
-  aspect-ratio: 1.35;
+  aspect-ratio: 1.3;
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: var(--surface-2);
+  /* O degradê sugere o puxador e dá profundidade de gaveta. */
+  background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1px;
-  padding: 2px;
+  padding: 3px 2px;
   cursor: pointer;
-  transition: transform 0.08s ease, border-color 0.12s ease;
+  overflow: hidden;
+  transition:
+    transform 0.12s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* O puxador, desenhado no topo da gaveta. */
+.drawer::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 42%;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--border);
 }
 
 .drawer:hover {
   transform: translateY(-2px);
   border-color: var(--accent);
+  box-shadow: 0 4px 10px var(--sombra);
+}
+
+.drawer .rotulo {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .drawer .qty {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
+  font-size: 9px;
+  line-height: 1.1;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .drawer .name {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--muted);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  padding: 0 2px;
 }
 
-.drawer.empty .qty {
-  color: #46536e;
-  font-weight: 400;
+/* Barra de ocupação no rodapé da gaveta. */
+.drawer .fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--accent);
+  opacity: 0.85;
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.drawer.empty {
+  background: none;
+  border-style: dashed;
+}
+
+.drawer.empty .rotulo {
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .drawer.selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent) inset;
+  box-shadow: 0 0 0 2px var(--accent) inset, 0 6px 14px var(--sombra);
+  transform: translateY(-3px);
 }
 
 .drawer.match {
   border-color: var(--ok);
   box-shadow: 0 0 0 2px var(--ok) inset;
+  animation: pulso 1.4s ease-out var(--atraso, 0s) 2;
+}
+
+.drawer.atual {
+  outline: 2px dashed var(--ok);
+  outline-offset: 2px;
 }
 
 .drawer.dimmed {
-  opacity: 0.25;
+  opacity: 0.22;
+  filter: saturate(0.3);
+}
+
+@keyframes pulso {
+  0% {
+    box-shadow: 0 0 0 2px var(--ok) inset, 0 0 0 0 rgba(52, 211, 153, 0.55);
+  }
+  60% {
+    box-shadow: 0 0 0 2px var(--ok) inset, 0 0 0 9px rgba(52, 211, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 2px var(--ok) inset, 0 0 0 0 rgba(52, 211, 153, 0);
+  }
 }
 
 .drawer .low-dot {
@@ -583,6 +677,78 @@ textarea:focus {
   color: var(--muted);
   text-align: center;
   padding: 32px 12px;
+}
+
+/* --- feedback e animações ---------------------------------------- */
+
+.busca-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.busca-nav button {
+  min-width: 30px;
+  padding: 4px 0;
+  line-height: 1;
+}
+
+.numero {
+  font-variant-numeric: tabular-nums;
+  transition: color 0.25s ease;
+}
+
+.numero.sobe {
+  color: var(--ok);
+}
+
+.numero.desce {
+  color: var(--danger);
+}
+
+/* Conteúdo do painel entra deslizando ao trocar de gaveta ou de aba. */
+.painel-conteudo {
+  animation: entra 0.22s ease-out;
+}
+
+@keyframes entra {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Confirmação que aparece e some sozinha. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 50;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--ok);
+  color: var(--text);
+  box-shadow: 0 6px 20px var(--sombra);
+  font-size: 13px;
+  animation: sobe-toast 0.25s ease-out;
+}
+
+@keyframes sobe-toast {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 button.link {

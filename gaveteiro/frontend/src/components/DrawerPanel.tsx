@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { api, imageUrl } from '../api'
 import type { Category, DrawerDetail, Movement, Part, StockEntry } from '../types'
+import { NumeroAnimado } from './NumeroAnimado'
 import { PartForm } from './PartForm'
 
 interface Props {
@@ -95,7 +96,12 @@ export function DrawerPanel({ drawerId, categories, allParts, onChanged }: Props
             <span className="muted">
               {detail.part_count === 0
                 ? 'vazia'
-                : `${detail.part_count} peça(s) · ${detail.total_quantity} un.`}
+                : `${detail.part_count} peça(s) · `}
+            {detail.part_count > 0 && (
+              <>
+                <NumeroAnimado valor={detail.total_quantity} /> un.
+              </>
+            )}
             </span>
           </>
         )}

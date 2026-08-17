@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 import type { Drawer, Module } from '../types'
 
 interface Props {
@@ -6,6 +8,8 @@ interface Props {
   selectedId: number | null
   /** Ids destacados pela busca. null = sem busca ativa. */
   matchIds: Set<number> | null
+  /** Resultado da busca em foco no momento, para navegar entre eles. */
+  focusedId?: number | null
   onSelect: (drawer: Drawer) => void
   /** No modo configuração as gavetas não abrem; os módulos é que se movem. */
   editing?: boolean
@@ -22,6 +26,7 @@ export function Cabinet({
   drawers,
   selectedId,
   matchIds,
+  focusedId = null,
   onSelect,
   editing = false,
   onMoveModule,
@@ -35,6 +40,18 @@ export function Cabinet({
     const list = byModule.get(drawer.module_id) ?? []
     list.push(drawer)
     byModule.set(drawer.module_id, list)
+  }
+
+  // A barra de ocupação é relativa à gaveta mais cheia — não existe uma
+  // capacidade real, então o que importa é a comparação entre gavetas.
+  const maiorQuantidade = Math.max(1, ...drawers.map((d) => d.total_quantity))
+
+  // Ordem do destaque da busca, para as gavetas pulsarem em sequência.
+  const ordemMatch = new Map<number, number>()
+  if (matchIds) {
+    drawers
+      .filter((d) => matchIds.has(d.id))
+      .forEach((d, i) => ordemMatch.set(d.id, i))
   }
 
   return (
@@ -72,7 +89,10 @@ export function Cabinet({
                   key={drawer.id}
                   drawer={drawer}
                   selected={drawer.id === selectedId}
+                  focused={drawer.id === focusedId}
                   match={matchIds?.has(drawer.id) ?? null}
+                  ordem={ordemMatch.get(drawer.id) ?? 0}
+                  maiorQuantidade={maiorQuantidade}
                   onSelect={onSelect}
                 />
               ))}
@@ -124,25 +144,39 @@ function ModuleEditor({
 function DrawerCell({
   drawer,
   selected,
+  focused,
   match,
+  ordem,
+  maiorQuantidade,
   onSelect,
 }: {
   drawer: Drawer
   selected: boolean
+  focused: boolean
   /** true = bate com a busca, false = não bate, null = sem busca */
   match: boolean | null
+  ordem: number
+  maiorQuantidade: number
   onSelect: (drawer: Drawer) => void
 }) {
   const classes = ['drawer']
   if (drawer.part_count === 0) classes.push('empty')
   if (selected) classes.push('selected')
+  if (focused) classes.push('atual')
   if (match === true) classes.push('match')
   if (match === false) classes.push('dimmed')
+
+  // Raiz quadrada porque as quantidades variam muito (1 a centenas): sem
+  // isso quase todas as barras ficariam invisíveis perto da maior.
+  const ocupacao = drawer.total_quantity
+    ? Math.max(0.12, Math.sqrt(drawer.total_quantity / maiorQuantidade))
+    : 0
 
   return (
     <button
       type="button"
       className={classes.join(' ')}
+      data-drawer={drawer.id}
       onClick={() => onSelect(drawer)}
       title={[
         drawer.label,
@@ -153,14 +187,33 @@ function DrawerCell({
       ]
         .filter(Boolean)
         .join(' — ')}
-      aria-label={`Gaveta ${drawer.label}`}
+      aria-label={`Gaveta ${drawer.label}${drawer.description ? `, ${drawer.description}` : ''}`}
+      style={{ '--atraso': `${(ordem % 12) * 0.06}s` } as CSSProperties}
     >
       {drawer.primary_color && (
         <span className="stripe" style={{ background: drawer.primary_color }} />
       )}
       {drawer.low_stock && <span className="low-dot" aria-hidden="true" />}
-      <span className="qty">{drawer.part_count === 0 ? '·' : drawer.total_quantity}</span>
-      <span className="name">{drawer.label}</span>
+
+      <span className="rotulo">{drawer.label}</span>
+      {drawer.description && <span className="name">{drawer.description}</span>}
+      {drawer.part_count > 0 && (
+        <span className="qty">
+          {drawer.part_count > 1 && `${drawer.part_count}× · `}
+          {drawer.total_quantity}
+        </span>
+      )}
+
+      {ocupacao > 0 && (
+        <span
+          className="fill"
+          style={{
+            transform: `scaleX(${ocupacao})`,
+            background: drawer.primary_color ?? 'var(--accent)',
+          }}
+          aria-hidden="true"
+        />
+      )}
     </button>
   )
 }

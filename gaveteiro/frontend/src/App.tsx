@@ -6,6 +6,7 @@ import { DrawerPanel } from './components/DrawerPanel'
 import { Login } from './components/Login'
 import { NumberingPanel } from './components/NumberingPanel'
 import { PartList } from './components/SearchPanel'
+import { observarTema } from './theme'
 import type { Category, Drawer, Module, Part } from './types'
 
 type PanelTab = 'drawer' | 'search' | 'low' | 'config'
@@ -67,6 +68,7 @@ export function App() {
       )
       setRascunho(null)
       await loadAll()
+      setToast('Arranjo salvo')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao salvar o arranjo')
     }
@@ -128,6 +130,17 @@ export function App() {
   const [results, setResults] = useState<Part[]>([])
   const [lowStock, setLowStock] = useState<Part[]>([])
   const [error, setError] = useState('')
+
+  // Confirmação passageira das ações que não têm efeito visível imediato.
+  const [toast, setToast] = useState('')
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(''), 2200)
+    return () => clearTimeout(timer)
+  }, [toast])
+
+  // Sob o Ingress herda o tema do HA; fora dele usa as cores próprias.
+  useEffect(() => observarTema(), [])
 
   useEffect(() => {
     api
@@ -191,6 +204,28 @@ export function App() {
     }
   }
 
+  // Navegação entre os resultados da busca, para não caçar a gaveta no grid.
+  const [indiceFoco, setIndiceFoco] = useState(0)
+
+  const gavetasEncontradas = useMemo(
+    () => (matchIds ? drawers.filter((d) => matchIds.has(d.id)) : []),
+    [matchIds, drawers],
+  )
+
+  useEffect(() => setIndiceFoco(0), [matchIds])
+
+  const irPara = (passo: number) => {
+    if (gavetasEncontradas.length === 0) return
+    const proximo =
+      (indiceFoco + passo + gavetasEncontradas.length) % gavetasEncontradas.length
+    setIndiceFoco(proximo)
+    const alvo = gavetasEncontradas[proximo]
+    setSelected(alvo)
+    document
+      .querySelector(`[data-drawer="${alvo.id}"]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+  }
+
   const totals = useMemo(
     () => ({
       ocupadas: drawers.filter((d) => d.part_count > 0).length,
@@ -217,6 +252,25 @@ export function App() {
             aria-label="Buscar peça"
           />
         </div>
+
+        {matchIds && (
+          <div className="busca-nav">
+            <span className={gavetasEncontradas.length ? 'ok-msg' : 'muted'}>
+              {gavetasEncontradas.length === 0
+                ? 'nenhuma gaveta'
+                : `${indiceFoco + 1} de ${gavetasEncontradas.length}`}
+            </span>
+            <button onClick={() => irPara(-1)} disabled={!gavetasEncontradas.length} aria-label="Resultado anterior">
+              ‹
+            </button>
+            <button onClick={() => irPara(1)} disabled={!gavetasEncontradas.length} aria-label="Próximo resultado">
+              ›
+            </button>
+            <button onClick={() => setQuery('')} aria-label="Limpar busca">
+              ✕
+            </button>
+          </div>
+        )}
         {lowStock.length > 0 && (
           <button className="danger" onClick={() => abrirPainel('low')}>
             {lowStock.length} p/ repor
@@ -283,6 +337,7 @@ export function App() {
             drawers={drawers}
             selectedId={selected?.id ?? null}
             matchIds={matchIds}
+            focusedId={gavetasEncontradas[indiceFoco]?.id ?? null}
             onSelect={(drawer) => {
               setSelected(drawer)
               abrirPainel('drawer')
@@ -317,6 +372,7 @@ export function App() {
             </button>
           </div>
 
+          <div className="painel-conteudo" key={`${tab}-${selected?.id ?? 0}`}>
           {tab === 'drawer' &&
             (selected ? (
               <DrawerPanel
@@ -349,10 +405,24 @@ export function App() {
           )}
 
           {tab === 'config' && (
-            <NumberingPanel modules={modules} drawers={drawers} onChanged={loadAll} />
+            <NumberingPanel
+              modules={modules}
+              drawers={drawers}
+              onChanged={() => {
+                loadAll()
+                setToast('Numeração aplicada')
+              }}
+            />
           )}
+          </div>
         </aside>
       </div>
+
+      {toast && (
+        <div className="toast" role="status">
+          {toast}
+        </div>
+      )}
     </div>
   )
 }
