@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..models import Category, Drawer, Module, Movement, Part, Stock
+from ..models import Category, Drawer, Module, Movement, Part, PartTag, Stock
 from ..schemas import ImportIn, ImportResult
 
 router = APIRouter()
@@ -61,8 +61,31 @@ def _preencher(session: Session, cache: dict[str, int], drawer: Drawer, dados) -
     return criadas
 
 
+def _limpar(session: Session) -> None:
+    """Zera o conteúdo, preservando módulos, gavetas e categorias."""
+    for stock in session.exec(select(Stock)).all():
+        session.delete(stock)
+    for movimento in session.exec(select(Movement)).all():
+        session.delete(movimento)
+    for vinculo in session.exec(select(PartTag)).all():
+        session.delete(vinculo)
+    session.flush()
+
+    for part in session.exec(select(Part)).all():
+        session.delete(part)
+
+    for drawer in session.exec(select(Drawer)).all():
+        if drawer.description:
+            drawer.description = ""
+            session.add(drawer)
+    session.flush()
+
+
 @router.post("/import", response_model=ImportResult)
 def importar(payload: ImportIn, session: Session = Depends(get_session)):
+    if payload.reset:
+        _limpar(session)
+
     cache: dict[str, int] = {}
     por_rotulo = {d.label: d for d in session.exec(select(Drawer)).all()}
 

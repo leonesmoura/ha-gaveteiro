@@ -194,6 +194,12 @@ class ImportModule(BaseModel):
 class ImportIn(BaseModel):
     drawers: list[ImportDrawer] = []
     new_modules: list[ImportModule] = []
+    """Apaga peças, estoque, histórico e descrições antes de importar.
+
+    Serve para reimportar a mesma planilha depois de mudar a numeração: o
+    conteúdo precisa seguir o número da gaveta, não a posição física.
+    """
+    reset: bool = False
 
 
 class ImportResult(BaseModel):

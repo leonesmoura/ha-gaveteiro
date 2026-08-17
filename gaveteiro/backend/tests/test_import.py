@@ -97,6 +97,45 @@ def test_modulo_repetido_e_ignorado(client):
     assert "já existe" in response.json()["skipped"][0]
 
 
+def test_reset_limpa_antes_de_importar(client):
+    """Reimportar depois de renumerar: o conteúdo tem que seguir o número."""
+    client.post(
+        "/api/import",
+        json={"drawers": [{"label": "5", "description": "Antigo", "items": [{"name": "Peça velha"}]}]},
+    )
+    assert len(client.get("/api/parts").json()) == 1
+
+    client.post(
+        "/api/import",
+        json={
+            "reset": True,
+            "drawers": [{"label": "9", "description": "Novo", "items": [{"name": "Peça nova"}]}],
+        },
+    )
+
+    pecas = client.get("/api/parts").json()
+    assert [p["name"] for p in pecas] == ["Peça nova"]
+    assert gaveta(client, "5")["description"] == ""
+    assert gaveta(client, "5")["part_count"] == 0
+    assert gaveta(client, "9")["description"] == "Novo"
+
+
+def test_reset_limpa_o_historico(client):
+    client.post("/api/import", json={"drawers": [{"label": "5", "items": [{"name": "X", "quantity": 3}]}]})
+    assert len(client.get("/api/movements").json()) == 1
+
+    client.post("/api/import", json={"reset": True, "drawers": []})
+    assert client.get("/api/movements").json() == []
+    assert client.get("/api/parts").json() == []
+
+
+def test_sem_reset_acumula(client):
+    corpo = {"drawers": [{"label": "5", "items": [{"name": "Y"}]}]}
+    client.post("/api/import", json=corpo)
+    client.post("/api/import", json=corpo)
+    assert len(client.get("/api/parts").json()) == 2
+
+
 def test_posicao_ocupada_falha(client):
     ocupado = client.get("/api/modules").json()[0]
     response = client.post(
