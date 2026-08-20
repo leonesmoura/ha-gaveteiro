@@ -274,14 +274,14 @@ function DrawerCell({
       aria-label={`Gaveta ${drawer.label}${drawer.description ? `, ${drawer.description}` : ''}`}
       style={{ '--atraso': `${(ordem % 12) * 0.06}s` } as CSSProperties}
     >
-      {miniatura && (
-        <img className="thumb-fundo" src={imageUrl(miniatura)} alt="" loading="lazy" />
-      )}
       {drawer.primary_color && (
         <span className="stripe" style={{ background: drawer.primary_color }} />
       )}
       {drawer.low_stock && <span className="low-dot" aria-hidden="true" />}
 
+      {miniatura && (
+        <img className="thumb-gaveta" src={imageUrl(miniatura)} alt="" loading="lazy" />
+      )}
       <span className="rotulo">{drawer.label}</span>
       {drawer.description && <span className="name">{drawer.description}</span>}
       {drawer.part_count > 0 && (

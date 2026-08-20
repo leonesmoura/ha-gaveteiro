@@ -495,37 +495,26 @@ button.link.danger {
   padding: 0 2px;
 }
 
-/* Miniatura ao fundo da gaveta. O texto fica por cima, com um véu para
-   continuar legível sobre fotos claras ou escuras. */
-.thumb-fundo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.55;
-  z-index: 0;
+/* Miniatura representativa dentro da gaveta — pequena, no fluxo, acima do
+   número. `contain` preserva a silhueta de imagens com fundo transparente,
+   que ficariam distorcidas com `cover`. */
+.thumb-gaveta {
+  max-height: 42%;
+  max-width: 72%;
+  object-fit: contain;
+  margin-bottom: 1px;
+  /* Sem fundo: PNG transparente aparece recortado sobre a gaveta. */
+  background: none;
 }
 
-.drawer.com-foto::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 35%, var(--surface) 100%);
-  opacity: 0.75;
-  z-index: 0;
+/* Com foto, o número encolhe um pouco para os dois caberem. */
+.drawer.com-foto .rotulo {
+  font-size: 10px;
+  margin-top: 1px;
 }
 
-.drawer.com-foto .rotulo,
-.drawer.com-foto .name,
-.drawer.com-foto .qty {
-  position: relative;
-  z-index: 1;
-  text-shadow: 0 1px 3px var(--surface);
-}
-
-.drawer.com-foto:hover .thumb-fundo {
-  opacity: 0.85;
+.drawer.com-foto .name {
+  display: none;
 }
 
 /* Barra de ocupação no rodapé da gaveta. */

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.1
+
+- A miniatura passa a ser um ícone pequeno acima do número, em vez de ocupar
+  a gaveta inteira
+- Imagens com fundo transparente são preservadas: antes a conversão para
+  WebP descartava o canal alfa e o PNG recortado ganhava fundo preto
+
 ## 1.8.0
 
 - Miniatura por gaveta: foto própria enviada pela galeria ou pela câmera do

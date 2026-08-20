@@ -47,6 +47,10 @@ gaveta tem várias peças, ou para fotografar o conteúdo real — clique na gav
 e use **Foto da gaveta**; no celular abre direto a câmera. Remover a foto
 própria faz a gaveta voltar a herdar a da peça.
 
+A miniatura aparece como um ícone pequeno acima do número, não como fundo da
+gaveta. PNG com fundo transparente funciona e fica recortado sobre a gaveta —
+bom para símbolos de componentes.
+
 O botão **Sem fotos** na barra superior desliga as miniaturas. É preferência
 de cada navegador, não do gaveteiro.
 

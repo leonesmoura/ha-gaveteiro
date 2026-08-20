@@ -90,3 +90,42 @@ def test_tipo_invalido(client, gaveta):
 
 def test_gaveta_inexistente(client):
     assert client.delete("/api/drawers/999999/image").status_code == 404
+
+
+def foto_transparente() -> io.BytesIO:
+    """PNG RGBA com metade transparente."""
+    buffer = io.BytesIO()
+    img = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    for x in range(100):
+        for y in range(200):
+            img.putpixel((x, y), (255, 0, 0, 255))
+    img.save(buffer, "PNG")
+    buffer.seek(0)
+    return buffer
+
+
+def test_transparencia_e_preservada(client, gaveta, tmp_path):
+    """PNG com alfa não pode virar fundo preto ao ser convertido."""
+    from PIL import Image as PILImage
+
+    resposta = client.post(
+        f"/api/drawers/{gaveta['id']}/image",
+        files={"file": ("t.png", foto_transparente(), "image/png")},
+    )
+    assert resposta.status_code == 200
+
+    baixada = client.get(f"/api/images/{resposta.json()['image_path']}")
+    salva = PILImage.open(io.BytesIO(baixada.content))
+    assert salva.mode == "RGBA"
+    # O canto direito continua transparente.
+    assert salva.getpixel((salva.width - 5, 5))[3] == 0
+
+
+def test_imagem_opaca_continua_rgb(client, gaveta):
+    from PIL import Image as PILImage
+
+    resposta = client.post(
+        f"/api/drawers/{gaveta['id']}/image", files={"file": ("o.png", foto(), "image/png")}
+    )
+    baixada = client.get(f"/api/images/{resposta.json()['image_path']}")
+    assert PILImage.open(io.BytesIO(baixada.content)).mode == "RGB"
