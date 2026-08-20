@@ -5,6 +5,8 @@ export interface Module {
   cols: number
   grid_col: number
   grid_row: number
+  drawer_ratio: number
+  drawer_scale: number
 }
 
 export interface Category {
@@ -83,6 +85,18 @@ export interface ModuleLayoutItem {
   grid_col: number
   grid_row: number
   name?: string
+  drawer_ratio?: number
+  drawer_scale?: number
+}
+
+export interface ModuleInput {
+  name: string
+  rows?: number
+  cols?: number
+  grid_col?: number
+  grid_row?: number
+  drawer_ratio?: number
+  drawer_scale?: number
 }
 
 export interface RenumberInput {

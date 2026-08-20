@@ -15,6 +15,10 @@ interface Props {
   editing?: boolean
   onMoveModule?: (moduleId: number, dCol: number, dRow: number) => void
   onRenameModule?: (moduleId: number, name: string) => void
+  /** Grade e aparência vão direto para a API: mexem em gavetas, não no rascunho. */
+  onResizeModule?: (moduleId: number, campo: 'rows' | 'cols', valor: number) => void
+  onStyleModule?: (moduleId: number, campo: 'drawer_ratio' | 'drawer_scale', valor: number) => void
+  onDeleteModule?: (moduleId: number) => void
 }
 
 /**
@@ -31,6 +35,9 @@ export function Cabinet({
   editing = false,
   onMoveModule,
   onRenameModule,
+  onResizeModule,
+  onStyleModule,
+  onDeleteModule,
 }: Props) {
   const cols = Math.max(...modules.map((m) => m.grid_col), 1)
   const rows = Math.max(...modules.map((m) => m.grid_row), 1)
@@ -73,13 +80,21 @@ export function Cabinet({
               module={module}
               onMove={(dCol, dRow) => onMoveModule?.(module.id, dCol, dRow)}
               onRename={(name) => onRenameModule?.(module.id, name)}
+              onResize={(campo, valor) => onResizeModule?.(module.id, campo, valor)}
+              onStyle={(campo, valor) => onStyleModule?.(module.id, campo, valor)}
+              onDelete={() => onDeleteModule?.(module.id)}
             />
           ) : (
             <div className="module-name">{module.name}</div>
           )}
           <div
             className="module-grid"
-            style={{ gridTemplateColumns: `repeat(${module.cols}, var(--drawer-w))` }}
+            style={
+              {
+                gridTemplateColumns: `repeat(${module.cols}, calc(var(--drawer-w) * ${module.drawer_scale}))`,
+                '--ratio': module.drawer_ratio,
+              } as CSSProperties
+            }
           >
             {(byModule.get(module.id) ?? [])
               .slice()
@@ -103,15 +118,21 @@ export function Cabinet({
   )
 }
 
-/** Cabeçalho do módulo no modo configuração: renomear e mover pelo arranjo. */
+/** Cabeçalho do módulo no modo configuração. */
 function ModuleEditor({
   module,
   onMove,
   onRename,
+  onResize,
+  onStyle,
+  onDelete,
 }: {
   module: Module
   onMove: (dCol: number, dRow: number) => void
   onRename: (name: string) => void
+  onResize: (campo: 'rows' | 'cols', valor: number) => void
+  onStyle: (campo: 'drawer_ratio' | 'drawer_scale', valor: number) => void
+  onDelete: () => void
 }) {
   return (
     <div className="module-editor">
@@ -120,6 +141,7 @@ function ModuleEditor({
         onChange={(e) => onRename(e.target.value)}
         aria-label={`Nome do módulo ${module.name}`}
       />
+
       <div className="module-arrows">
         <button onClick={() => onMove(0, -1)} title="Mover para cima" aria-label="Mover para cima">
           ↑
@@ -134,8 +156,60 @@ function ModuleEditor({
           ↓
         </button>
       </div>
+
+      {/* Grade: aplica na hora, porque cria ou remove gavetas de verdade. */}
+      <div className="module-campo">
+        <span>grade</span>
+        <input
+          type="number"
+          min={1}
+          value={module.rows}
+          onChange={(e) => onResize('rows', Number(e.target.value))}
+          aria-label={`Linhas do módulo ${module.name}`}
+        />
+        <span>×</span>
+        <input
+          type="number"
+          min={1}
+          value={module.cols}
+          onChange={(e) => onResize('cols', Number(e.target.value))}
+          aria-label={`Colunas do módulo ${module.name}`}
+        />
+      </div>
+
+      <div className="module-campo">
+        <span>gaveta</span>
+        <input
+          type="range"
+          min={0.5}
+          max={3}
+          step={0.1}
+          value={module.drawer_ratio}
+          onChange={(e) => onStyle('drawer_ratio', Number(e.target.value))}
+          title="Proporção largura/altura da gaveta"
+          aria-label={`Proporção da gaveta do módulo ${module.name}`}
+        />
+      </div>
+
+      <div className="module-campo">
+        <span>escala</span>
+        <input
+          type="range"
+          min={0.5}
+          max={2.5}
+          step={0.1}
+          value={module.drawer_scale}
+          onChange={(e) => onStyle('drawer_scale', Number(e.target.value))}
+          title="Tamanho da gaveta em relação aos outros módulos"
+          aria-label={`Escala da gaveta do módulo ${module.name}`}
+        />
+      </div>
+
       <div className="module-pos">
         col {module.grid_col} · lin {module.grid_row}
+        <button className="link danger" onClick={onDelete} title="Apagar este módulo">
+          apagar
+        </button>
       </div>
     </div>
   )

@@ -55,6 +55,71 @@ export function App() {
     })
   }
 
+  // Grade e aparência mexem em gavetas reais, então vão direto para a API em
+  // vez de esperar o "Salvar arranjo" — que só carrega posições e nomes.
+  const ajustarModulo = async (
+    moduleId: number,
+    campo: 'rows' | 'cols' | 'drawer_ratio' | 'drawer_scale',
+    valor: number,
+  ) => {
+    if (!Number.isFinite(valor) || valor < 0) return
+    try {
+      await api.updateModule(moduleId, { [campo]: valor })
+      const frescos = await api.modules()
+      setModules(frescos)
+      // O rascunho carrega só posição e nome (as edições ainda não salvas).
+      // Espalhar o rascunho inteiro por cima desfaria o que a API acabou de
+      // gravar — grade, proporção e escala têm que vir do servidor.
+      setRascunho((atual) => {
+        if (!atual) return atual
+        const local = new Map(atual.map((m) => [m.id, m]))
+        return frescos.map((f) => {
+          const r = local.get(f.id)
+          return r ? { ...f, name: r.name, grid_col: r.grid_col, grid_row: r.grid_row } : f
+        })
+      })
+      setDrawers(await api.drawers())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao ajustar o módulo')
+    }
+  }
+
+  const apagarModulo = async (moduleId: number) => {
+    const alvo = (rascunho ?? modules).find((m) => m.id === moduleId)
+    if (!alvo) return
+    if (!window.confirm(`Apagar o módulo ${alvo.name} e as gavetas dele?`)) return
+    try {
+      await api.deleteModule(moduleId)
+      setRascunho((atual) => atual?.filter((m) => m.id !== moduleId) ?? atual)
+      await loadAll()
+      setToast('Módulo apagado')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao apagar o módulo')
+    }
+  }
+
+  const novoModulo = async () => {
+    const usadas = new Set((rascunho ?? modules).map((m) => `${m.grid_col}:${m.grid_row}`))
+    let posicao = { grid_col: 1, grid_row: 1 }
+    busca: for (let r = 1; r < 40; r++)
+      for (let c = 1; c < 40; c++)
+        if (!usadas.has(`${c}:${r}`)) {
+          posicao = { grid_col: c, grid_row: r }
+          break busca
+        }
+
+    const nome = window.prompt('Nome do novo módulo:', `M${(rascunho ?? modules).length + 1}`)
+    if (!nome?.trim()) return
+    try {
+      await api.createModule({ name: nome.trim(), rows: 4, cols: 4, ...posicao })
+      await loadAll()
+      setRascunho(null)
+      setToast('Módulo criado')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao criar o módulo')
+    }
+  }
+
   const salvarArranjo = async () => {
     if (!rascunho) return
     try {
@@ -312,10 +377,12 @@ export function App() {
       {editando && (
         <div className="config-bar">
           <span>
-            Modo configuração — use as setas para mover os módulos. Mover para uma célula
-            ocupada troca os dois de lugar.
+            Modo configuração — setas movem o módulo (célula ocupada troca de lugar).
+            Grade, proporção e escala da gaveta são aplicadas na hora; posição e nome
+            só ao salvar.
           </span>
           <div className="row">
+            <button onClick={novoModulo}>+ Módulo</button>
             <button onClick={() => setRascunho(null)}>Cancelar</button>
             <button className="primary" onClick={salvarArranjo}>
               Salvar arranjo
@@ -334,6 +401,9 @@ export function App() {
             onRenameModule={(id, name) =>
               setRascunho((atual) => atual?.map((m) => (m.id === id ? { ...m, name } : m)) ?? atual)
             }
+            onResizeModule={ajustarModulo}
+            onStyleModule={ajustarModulo}
+            onDeleteModule={apagarModulo}
             drawers={drawers}
             selectedId={selected?.id ?? null}
             matchIds={matchIds}

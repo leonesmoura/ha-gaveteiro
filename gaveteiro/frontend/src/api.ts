@@ -4,6 +4,7 @@ import type {
   Drawer,
   DrawerDetail,
   Module,
+  ModuleInput,
   ModuleLayoutItem,
   Movement,
   Part,
@@ -72,6 +73,11 @@ export const api = {
     request<Module>(`/modules/${id}`, { method: 'PATCH', body: json({ grid_col, grid_row }) }),
   setLayout: (modules: ModuleLayoutItem[]) =>
     request<Module[]>('/modules/layout', { method: 'POST', body: json({ modules }) }),
+  updateModule: (id: number, payload: Partial<ModuleInput>) =>
+    request<Module>(`/modules/${id}`, { method: 'PATCH', body: json(payload) }),
+  createModule: (payload: ModuleInput) =>
+    request<Module>('/modules', { method: 'POST', body: json(payload) }),
+  deleteModule: (id: number) => request<void>(`/modules/${id}`, { method: 'DELETE' }),
 
   drawers: () => request<Drawer[]>('/drawers'),
   drawer: (id: number) => request<DrawerDetail>(`/drawers/${id}`),

@@ -41,6 +41,8 @@ def init_db() -> None:
 # ALTER TABLE explícito.
 COLUNAS_NOVAS: list[tuple[str, str, str]] = [
     ("drawer", "description", "TEXT NOT NULL DEFAULT ''"),
+    ("module", "drawer_ratio", "FLOAT NOT NULL DEFAULT 1.3"),
+    ("module", "drawer_scale", "FLOAT NOT NULL DEFAULT 1.0"),
 ]
 
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..models import Drawer, Module
+from ..models import Drawer, Module, Movement, Stock
 from ..queries import drawer_entries, drawer_summaries
 from ..schemas import (
     DrawerDetail,
@@ -26,17 +26,127 @@ def list_modules(session: Session = Depends(get_session)):
     return session.exec(select(Module).order_by(Module.grid_row, Module.grid_col)).all()
 
 
+def _proximo_numero(session: Session) -> tuple[int, set[str]]:
+    """Menor número livre e o conjunto de rótulos já usados."""
+    usados = set(session.exec(select(Drawer.label)).all())
+    numericos = [int(l) for l in usados if l.isdigit()]
+    return max(numericos, default=0) + 1, usados
+
+
+def _redimensionar(session: Session, module: Module, rows: int, cols: int) -> None:
+    """Ajusta a grade do módulo criando ou removendo gavetas.
+
+    Só remove gaveta vazia: apagar uma gaveta com peça dentro perderia
+    estoque e histórico sem o usuário perceber.
+    """
+    if rows < 1 or cols < 1:
+        raise HTTPException(400, "O módulo precisa de ao menos uma linha e uma coluna")
+
+    atuais = {(d.row, d.col): d for d in session.exec(
+        select(Drawer).where(Drawer.module_id == module.id)
+    ).all()}
+
+    sobrando = [d for (row, col), d in atuais.items() if row > rows or col > cols]
+    ocupadas = [
+        d for d in sobrando
+        if session.exec(select(Stock).where(Stock.drawer_id == d.id)).first() is not None
+    ]
+    if ocupadas:
+        rotulos = ", ".join(sorted(d.label for d in ocupadas))
+        raise HTTPException(
+            409,
+            f"Estas gavetas sairiam da grade mas têm conteúdo: {rotulos}. "
+            "Esvazie-as antes de reduzir o módulo.",
+        )
+
+    for drawer in sobrando:
+        for movimento in session.exec(
+            select(Movement).where(Movement.drawer_id == drawer.id)
+        ).all():
+            session.delete(movimento)
+        session.delete(drawer)
+    session.flush()
+
+    proximo, usados = _proximo_numero(session)
+    for row in range(1, rows + 1):
+        for col in range(1, cols + 1):
+            if (row, col) in atuais:
+                continue  # célula já existe e continua dentro da grade
+            label = str(proximo)
+            while label in usados:
+                proximo += 1
+                label = str(proximo)
+            usados.add(label)
+            proximo += 1
+            session.add(Drawer(module_id=module.id, row=row, col=col, label=label))
+
+    module.rows = rows
+    module.cols = cols
+
+
 @router.patch("/modules/{module_id}", response_model=ModuleOut)
 def update_module(module_id: int, payload: ModuleUpdate, session: Session = Depends(get_session)):
     module = session.get(Module, module_id)
     if module is None:
         raise HTTPException(404, "Módulo não encontrado")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+
+    dados = payload.model_dump(exclude_unset=True)
+
+    rows = dados.pop("rows", None)
+    cols = dados.pop("cols", None)
+    if rows is not None or cols is not None:
+        # `rows or module.rows` engoliria um 0 informado de propósito.
+        _redimensionar(
+            session,
+            module,
+            module.rows if rows is None else rows,
+            module.cols if cols is None else cols,
+        )
+
+    if "name" in dados:
+        nome = (dados.pop("name") or "").strip()
+        if not nome:
+            raise HTTPException(400, "O nome do módulo não pode ficar vazio")
+        conflito = session.exec(select(Module).where(Module.name == nome)).first()
+        if conflito is not None and conflito.id != module_id:
+            raise HTTPException(409, f"Já existe um módulo chamado {nome}")
+        module.name = nome
+
+    for field, value in dados.items():
         setattr(module, field, value)
+
     session.add(module)
     session.commit()
     session.refresh(module)
     return module
+
+
+@router.delete("/modules/{module_id}", status_code=204)
+def delete_module(module_id: int, session: Session = Depends(get_session)):
+    """Remove o módulo. Recusa se alguma gaveta ainda tiver conteúdo."""
+    module = session.get(Module, module_id)
+    if module is None:
+        raise HTTPException(404, "Módulo não encontrado")
+
+    gavetas = session.exec(select(Drawer).where(Drawer.module_id == module_id)).all()
+    com_conteudo = [
+        d.label for d in gavetas
+        if session.exec(select(Stock).where(Stock.drawer_id == d.id)).first() is not None
+    ]
+    if com_conteudo:
+        raise HTTPException(
+            409,
+            f"O módulo tem gavetas com conteúdo: {', '.join(sorted(com_conteudo))}",
+        )
+
+    for drawer in gavetas:
+        for movimento in session.exec(
+            select(Movement).where(Movement.drawer_id == drawer.id)
+        ).all():
+            session.delete(movimento)
+        session.delete(drawer)
+    session.delete(module)
+    session.commit()
 
 
 @router.post("/modules", response_model=ModuleOut, status_code=201)
@@ -65,6 +175,8 @@ def create_module(payload: ModuleCreate, session: Session = Depends(get_session)
         cols=payload.cols,
         grid_col=payload.grid_col,
         grid_row=payload.grid_row,
+        drawer_ratio=payload.drawer_ratio,
+        drawer_scale=payload.drawer_scale,
     )
     session.add(module)
     session.flush()
@@ -121,6 +233,10 @@ def set_layout(payload: ModuleLayoutIn, session: Session = Depends(get_session))
         module.grid_row = item.grid_row
         if item.name is not None:
             module.name = item.name.strip()
+        if item.drawer_ratio is not None:
+            module.drawer_ratio = item.drawer_ratio
+        if item.drawer_scale is not None:
+            module.drawer_scale = item.drawer_scale
         session.add(module)
 
     session.commit()

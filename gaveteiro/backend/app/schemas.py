@@ -13,12 +13,18 @@ class ModuleOut(BaseModel):
     cols: int
     grid_col: int
     grid_row: int
+    drawer_ratio: float = 1.3
+    drawer_scale: float = 1.0
 
 
 class ModuleUpdate(BaseModel):
     name: Optional[str] = None
     grid_col: Optional[int] = None
     grid_row: Optional[int] = None
+    rows: Optional[int] = None
+    cols: Optional[int] = None
+    drawer_ratio: Optional[float] = None
+    drawer_scale: Optional[float] = None
 
 
 class ModuleCreate(BaseModel):
@@ -27,6 +33,8 @@ class ModuleCreate(BaseModel):
     cols: int = 4
     grid_col: int = 1
     grid_row: int = 1
+    drawer_ratio: float = 1.3
+    drawer_scale: float = 1.0
     """Rótulos das novas gavetas; se omitido, continuam a numeração existente."""
     label_prefix: str = ""
 
@@ -36,6 +44,8 @@ class ModuleLayoutItem(BaseModel):
     grid_col: int
     grid_row: int
     name: Optional[str] = None
+    drawer_ratio: Optional[float] = None
+    drawer_scale: Optional[float] = None
 
 
 class ModuleLayoutIn(BaseModel):

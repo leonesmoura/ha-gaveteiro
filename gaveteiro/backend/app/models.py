@@ -26,6 +26,10 @@ class Module(SQLModel, table=True):
     # Posição do módulo no arranjo da parede/bancada (1-indexado).
     grid_col: int = 1
     grid_row: int = 1
+    # Proporção largura/altura da gaveta e escala relativa aos outros
+    # módulos — gaveteiros costumam misturar gavetas rasas e fundas.
+    drawer_ratio: float = 1.3
+    drawer_scale: float = 1.0
 
     drawers: list["Drawer"] = Relationship(back_populates="module")
 
