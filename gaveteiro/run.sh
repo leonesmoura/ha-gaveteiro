@@ -11,6 +11,10 @@ export AUTH_USER="$(bashio::config 'username')"
 export AUTH_PASSWORD="$(bashio::config 'password')"
 export IMAGE_MAX_SIZE="$(bashio::config 'image_max_size')"
 
+# A versão aparece no cabeçalho do app: sem ela não dá para saber, olhando a
+# tela, se o navegador carregou a build nova ou uma em cache.
+export APP_VERSION="$(bashio::addon.version)"
+
 mkdir -p /share/gaveteiro
 
 if bashio::config.equals 'password' 'troque-esta-senha'; then

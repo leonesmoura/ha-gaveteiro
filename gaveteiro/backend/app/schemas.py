@@ -228,3 +228,4 @@ class AuthStatus(BaseModel):
     authenticated: bool
     via_ingress: bool
     username: Optional[str] = None
+    version: str = "dev"

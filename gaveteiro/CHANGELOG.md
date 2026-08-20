@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.1
+
+- Cabeçalho mostra "Gaveteiro, Estoque" e a versão instalada, para conferir
+  de olho se o navegador carregou a build nova
+- `index.html` deixa de ser cacheado: sem isso o navegador continuava
+  carregando a versão antiga do app mesmo depois de atualizar o add-on
+
 ## 1.6.0
 
 - Grade configurável por módulo: criar módulos de qualquer tamanho, não só 4×4

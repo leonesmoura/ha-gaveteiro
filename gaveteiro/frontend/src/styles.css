@@ -125,10 +125,22 @@ textarea:focus {
   flex-wrap: wrap;
 }
 
+.titulo {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
 .topbar h1 {
   font-size: 17px;
   margin: 0;
   white-space: nowrap;
+}
+
+.versao {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .topbar .grow {

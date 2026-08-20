@@ -78,6 +78,7 @@ export interface AuthStatus {
   authenticated: boolean
   via_ingress: boolean
   username: string | null
+  version: string
 }
 
 export interface ModuleLayoutItem {

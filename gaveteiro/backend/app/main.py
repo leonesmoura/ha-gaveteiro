@@ -65,4 +65,15 @@ if STATIC_DIR.is_dir():
         """Catch-all da SPA. A tela de login é decidida no frontend."""
         if full_path.startswith("api/"):
             raise HTTPException(404, "Rota não encontrada")
-        return FileResponse(STATIC_DIR / "index.html")
+        # Os arquivos em /assets têm hash no nome e podem ser cacheados para
+        # sempre, mas o index.html é quem aponta para eles: se ele ficar em
+        # cache, o navegador continua carregando a versão antiga do app
+        # mesmo depois do add-on atualizar.
+        return FileResponse(
+            STATIC_DIR / "index.html",
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )

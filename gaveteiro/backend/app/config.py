@@ -30,6 +30,9 @@ SESSION_SECRET = os.environ.get("SESSION_SECRET", "")
 # Ingress, que já autenticou o usuário no HA.
 INGRESS_SOURCE_IP = os.environ.get("INGRESS_SOURCE_IP", "172.30.32.2")
 
+# Versão do add-on, exibida no cabeçalho. O run.sh exporta via bashio.
+APP_VERSION = os.environ.get("APP_VERSION", "dev")
+
 # Tamanho máximo do lado maior das imagens salvas.
 IMAGE_MAX_SIZE = int(os.environ.get("IMAGE_MAX_SIZE", "800"))
 

@@ -13,6 +13,7 @@ type PanelTab = 'drawer' | 'search' | 'low' | 'config'
 
 export function App() {
   const [authed, setAuthed] = useState<boolean | null>(null)
+  const [versao, setVersao] = useState('')
   const [modules, setModules] = useState<Module[]>([])
   const [drawers, setDrawers] = useState<Drawer[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -210,7 +211,10 @@ export function App() {
   useEffect(() => {
     api
       .authStatus()
-      .then((status) => setAuthed(status.authenticated))
+      .then((status) => {
+        setAuthed(status.authenticated)
+        setVersao(status.version)
+      })
       .catch(() => setAuthed(false))
   }, [])
 
@@ -305,7 +309,10 @@ export function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>Gaveteiro</h1>
+        <div className="titulo">
+          <h1>Gaveteiro, Estoque</h1>
+          {versao && <span className="versao">v{versao}</span>}
+        </div>
         <span className="muted hide-mobile">
           {totals.ocupadas}/{drawers.length} gavetas · {totals.pecas} peças
         </span>
