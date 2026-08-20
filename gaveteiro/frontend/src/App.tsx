@@ -121,6 +121,33 @@ export function App() {
     }
   }
 
+  // Controle geral: aplica a mesma aparência a todos os módulos de uma vez,
+  // sobrescrevendo os ajustes individuais.
+  const aparenciaGeral = async (payload: { drawer_ratio?: number; drawer_scale?: number }) => {
+    try {
+      const frescos = await api.setAppearance(payload)
+      setModules(frescos)
+      setRascunho((atual) => {
+        if (!atual) return atual
+        const local = new Map(atual.map((m) => [m.id, m]))
+        return frescos.map((f) => {
+          const r = local.get(f.id)
+          return r ? { ...f, name: r.name, grid_col: r.grid_col, grid_row: r.grid_row } : f
+        })
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao aplicar a aparência')
+    }
+  }
+
+  /** Valor mostrado no controle geral. Com módulos divergentes, usa o do
+   *  primeiro e a etiqueta avisa que está misto. */
+  const valorGeral = (campo: 'drawer_ratio' | 'drawer_scale') =>
+    (rascunho ?? modules)[0]?.[campo] ?? 1
+
+  const misturado = (campo: 'drawer_ratio' | 'drawer_scale') =>
+    new Set((rascunho ?? modules).map((m) => m[campo])).size > 1
+
   const salvarArranjo = async () => {
     if (!rascunho) return
     try {
@@ -383,11 +410,50 @@ export function App() {
 
       {editando && (
         <div className="config-bar">
-          <span>
-            Modo configuração — setas movem o módulo (célula ocupada troca de lugar).
-            Grade, proporção e escala da gaveta são aplicadas na hora; posição e nome
-            só ao salvar.
+          <span className="config-dica">
+            Setas movem o módulo (célula ocupada troca de lugar). Grade, proporção e
+            escala são aplicadas na hora; posição e nome só ao salvar.
           </span>
+
+          <div className="config-geral">
+            <label>
+              <span>
+                gaveta{misturado('drawer_ratio') && <em> (misto)</em>}
+              </span>
+              <input
+                type="range"
+                min={0.5}
+                max={3}
+                step={0.1}
+                value={valorGeral('drawer_ratio')}
+                onChange={(e) => aparenciaGeral({ drawer_ratio: Number(e.target.value) })}
+                title="Proporção de todas as gavetas"
+                aria-label="Proporção de todas as gavetas"
+              />
+            </label>
+            <label>
+              <span>
+                escala{misturado('drawer_scale') && <em> (misto)</em>}
+              </span>
+              <input
+                type="range"
+                min={0.5}
+                max={2.5}
+                step={0.1}
+                value={valorGeral('drawer_scale')}
+                onChange={(e) => aparenciaGeral({ drawer_scale: Number(e.target.value) })}
+                title="Tamanho de todas as gavetas"
+                aria-label="Tamanho de todas as gavetas"
+              />
+            </label>
+            <button
+              onClick={() => aparenciaGeral({ drawer_ratio: 1.3, drawer_scale: 1 })}
+              title="Voltar proporção e escala ao padrão"
+            >
+              Padrão
+            </button>
+          </div>
+
           <div className="row">
             <button onClick={novoModulo}>+ Módulo</button>
             <button onClick={() => setRascunho(null)}>Cancelar</button>

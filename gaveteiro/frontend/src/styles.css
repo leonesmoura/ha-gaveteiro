@@ -185,6 +185,44 @@ textarea:focus {
   color: var(--muted);
 }
 
+.config-dica {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.config-geral {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.config-geral label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.config-geral label em {
+  font-style: normal;
+  opacity: 0.65;
+}
+
+.config-geral input[type='range'] {
+  width: 90px;
+  padding: 0;
+}
+
+.config-geral button {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
 /* As gavetas não abrem enquanto se mexe no arranjo. */
 .cabinet.editing .drawer {
   pointer-events: none;

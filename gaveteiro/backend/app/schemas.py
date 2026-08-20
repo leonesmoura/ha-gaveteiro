@@ -48,6 +48,13 @@ class ModuleLayoutItem(BaseModel):
     drawer_scale: Optional[float] = None
 
 
+class AppearanceIn(BaseModel):
+    """Aparência aplicada a todos os módulos de uma vez."""
+
+    drawer_ratio: Optional[float] = None
+    drawer_scale: Optional[float] = None
+
+
 class ModuleLayoutIn(BaseModel):
     """Arranjo completo dos módulos, aplicado de uma vez só."""
 

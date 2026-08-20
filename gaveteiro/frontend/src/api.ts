@@ -78,6 +78,8 @@ export const api = {
   createModule: (payload: ModuleInput) =>
     request<Module>('/modules', { method: 'POST', body: json(payload) }),
   deleteModule: (id: number) => request<void>(`/modules/${id}`, { method: 'DELETE' }),
+  setAppearance: (payload: { drawer_ratio?: number; drawer_scale?: number }) =>
+    request<Module[]>('/modules/appearance', { method: 'POST', body: json(payload) }),
 
   drawers: () => request<Drawer[]>('/drawers'),
   drawer: (id: number) => request<DrawerDetail>(`/drawers/${id}`),

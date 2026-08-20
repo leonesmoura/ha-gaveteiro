@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.0
+
+- Controle geral de proporção e escala na barra de configuração, aplicando a
+  todos os módulos de uma vez; a etiqueta avisa "(misto)" quando os módulos
+  estão diferentes entre si
+- Botão "Padrão" devolve proporção e escala aos valores originais
+
 ## 1.6.1
 
 - Cabeçalho mostra "Gaveteiro, Estoque" e a versão instalada, para conferir

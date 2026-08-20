@@ -7,6 +7,7 @@ from ..db import get_session
 from ..models import Drawer, Module, Movement, Stock
 from ..queries import drawer_entries, drawer_summaries
 from ..schemas import (
+    AppearanceIn,
     DrawerDetail,
     DrawerOut,
     DrawerRename,
@@ -200,6 +201,33 @@ def create_module(payload: ModuleCreate, session: Session = Depends(get_session)
     session.commit()
     session.refresh(module)
     return module
+
+
+@router.post("/modules/appearance", response_model=list[ModuleOut])
+def set_appearance(payload: AppearanceIn, session: Session = Depends(get_session)):
+    """Aplica proporção e/ou escala a todos os módulos.
+
+    Separado de /modules/layout de propósito: no modo configuração o arranjo
+    fica num rascunho não salvo, e mexer na aparência não pode gravar junto
+    posições e nomes que o usuário ainda está experimentando.
+    """
+    if payload.drawer_ratio is None and payload.drawer_scale is None:
+        raise HTTPException(400, "Informe drawer_ratio e/ou drawer_scale")
+    if payload.drawer_ratio is not None and payload.drawer_ratio <= 0:
+        raise HTTPException(400, "A proporção precisa ser maior que zero")
+    if payload.drawer_scale is not None and payload.drawer_scale <= 0:
+        raise HTTPException(400, "A escala precisa ser maior que zero")
+
+    modules = session.exec(select(Module)).all()
+    for module in modules:
+        if payload.drawer_ratio is not None:
+            module.drawer_ratio = payload.drawer_ratio
+        if payload.drawer_scale is not None:
+            module.drawer_scale = payload.drawer_scale
+        session.add(module)
+
+    session.commit()
+    return session.exec(select(Module).order_by(Module.grid_row, Module.grid_col)).all()
 
 
 @router.post("/modules/layout", response_model=list[ModuleOut])
