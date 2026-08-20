@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0
+
+- Miniatura por gaveta: foto própria enviada pela galeria ou pela câmera do
+  celular, ou herdada automaticamente da primeira peça que tiver imagem
+- Botão "Sem fotos"/"Com fotos" liga e desliga as miniaturas; a escolha fica
+  guardada no navegador de cada pessoa
+- Remover a foto própria devolve a herdada da peça
+
 ## 1.7.0
 
 - Controle geral de proporção e escala na barra de configuração, aplicando a

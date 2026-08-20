@@ -70,6 +70,12 @@ def drawer_summaries(session: Session) -> list[DrawerOut]:
                 None,
             )
             color = first_category.color if first_category else None
+
+        # Sem foto própria, mostra a da primeira peça que tiver uma: assim a
+        # miniatura já aparece sem precisar fotografar gaveta por gaveta.
+        imagem = drawer.image_path
+        if not imagem:
+            imagem = next((p.image_path for _, p in entries if p.image_path), None)
         out.append(
             DrawerOut(
                 id=drawer.id,
@@ -79,6 +85,8 @@ def drawer_summaries(session: Session) -> list[DrawerOut]:
                 col=drawer.col,
                 label=drawer.label,
                 description=drawer.description,
+                image_path=imagem,
+                own_image=bool(drawer.image_path),
                 total_quantity=total,
                 part_count=len(entries),
                 low_stock=low,

@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 
+import { imageUrl } from '../api'
 import type { Drawer, Module } from '../types'
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
   /** Resultado da busca em foco no momento, para navegar entre eles. */
   focusedId?: number | null
   onSelect: (drawer: Drawer) => void
+  /** Miniaturas ligadas/desligadas — preferência de quem está olhando. */
+  showThumbs?: boolean
   /** No modo configuração as gavetas não abrem; os módulos é que se movem. */
   editing?: boolean
   onMoveModule?: (moduleId: number, dCol: number, dRow: number) => void
@@ -32,6 +35,7 @@ export function Cabinet({
   matchIds,
   focusedId = null,
   onSelect,
+  showThumbs = true,
   editing = false,
   onMoveModule,
   onRenameModule,
@@ -108,6 +112,7 @@ export function Cabinet({
                   match={matchIds?.has(drawer.id) ?? null}
                   ordem={ordemMatch.get(drawer.id) ?? 0}
                   maiorQuantidade={maiorQuantidade}
+                  showThumb={showThumbs}
                   onSelect={onSelect}
                 />
               ))}
@@ -222,6 +227,7 @@ function DrawerCell({
   match,
   ordem,
   maiorQuantidade,
+  showThumb,
   onSelect,
 }: {
   drawer: Drawer
@@ -231,9 +237,13 @@ function DrawerCell({
   match: boolean | null
   ordem: number
   maiorQuantidade: number
+  showThumb: boolean
   onSelect: (drawer: Drawer) => void
 }) {
+  const miniatura = showThumb ? drawer.image_path : null
+
   const classes = ['drawer']
+  if (miniatura) classes.push('com-foto')
   if (drawer.part_count === 0) classes.push('empty')
   if (selected) classes.push('selected')
   if (focused) classes.push('atual')
@@ -264,6 +274,9 @@ function DrawerCell({
       aria-label={`Gaveta ${drawer.label}${drawer.description ? `, ${drawer.description}` : ''}`}
       style={{ '--atraso': `${(ordem % 12) * 0.06}s` } as CSSProperties}
     >
+      {miniatura && (
+        <img className="thumb-fundo" src={imageUrl(miniatura)} alt="" loading="lazy" />
+      )}
       {drawer.primary_color && (
         <span className="stripe" style={{ background: drawer.primary_color }} />
       )}

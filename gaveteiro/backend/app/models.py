@@ -44,6 +44,8 @@ class Drawer(SQLModel, table=True):
     label: str = Field(index=True, unique=True)
     # Para que serve a gaveta ("Cap. Poliester"), independente do que há nela.
     description: str = ""
+    # Foto própria da gaveta. Vazio = herda a da primeira peça que tiver uma.
+    image_path: Optional[str] = None
 
     module: Optional[Module] = Relationship(back_populates="drawers")
     stock: list["Stock"] = Relationship(back_populates="drawer")

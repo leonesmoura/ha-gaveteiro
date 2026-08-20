@@ -1,8 +1,9 @@
 """Módulos e gavetas — o que o grid interativo desenha."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlmodel import Session, select
 
+from .. import images
 from ..db import get_session
 from ..models import Drawer, Module, Movement, Stock
 from ..queries import drawer_entries, drawer_summaries
@@ -344,6 +345,42 @@ def rename_drawer(drawer_id: int, payload: DrawerRename, session: Session = Depe
     session.add(drawer)
     session.commit()
 
+    return next(d for d in drawer_summaries(session) if d.id == drawer_id)
+
+
+@router.post("/drawers/{drawer_id}/image", response_model=DrawerOut)
+async def upload_drawer_image(
+    drawer_id: int,
+    file: UploadFile = File(...),
+    session: Session = Depends(get_session),
+):
+    """Foto própria da gaveta, que tem prioridade sobre a herdada da peça."""
+    drawer = session.get(Drawer, drawer_id)
+    if drawer is None:
+        raise HTTPException(404, "Gaveta não encontrada")
+
+    antiga = drawer.image_path
+    drawer.image_path = images.salvar(file)
+    session.add(drawer)
+    session.commit()
+
+    images.remover(antiga)
+    return next(d for d in drawer_summaries(session) if d.id == drawer_id)
+
+
+@router.delete("/drawers/{drawer_id}/image", response_model=DrawerOut)
+def delete_drawer_image(drawer_id: int, session: Session = Depends(get_session)):
+    """Remove a foto própria; a gaveta volta a herdar a da peça, se houver."""
+    drawer = session.get(Drawer, drawer_id)
+    if drawer is None:
+        raise HTTPException(404, "Gaveta não encontrada")
+
+    antiga = drawer.image_path
+    drawer.image_path = None
+    session.add(drawer)
+    session.commit()
+
+    images.remover(antiga)
     return next(d for d in drawer_summaries(session) if d.id == drawer_id)
 
 

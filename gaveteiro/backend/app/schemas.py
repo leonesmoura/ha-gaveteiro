@@ -142,6 +142,10 @@ class DrawerOut(BaseModel):
     col: int
     label: str
     description: str = ""
+    #: Imagem a exibir — própria da gaveta ou herdada de uma peça dentro dela.
+    image_path: Optional[str] = None
+    #: True quando a imagem é da gaveta, não herdada.
+    own_image: bool = False
     total_quantity: int = 0
     part_count: int = 0
     low_stock: bool = False

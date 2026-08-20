@@ -42,6 +42,8 @@ export interface Drawer {
   col: number
   label: string
   description: string
+  image_path: string | null
+  own_image: boolean
   total_quantity: number
   part_count: number
   low_stock: boolean

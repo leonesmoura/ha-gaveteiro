@@ -87,6 +87,13 @@ export const api = {
     request<Drawer>(`/drawers/${id}`, { method: 'PATCH', body: json({ label }) }),
   describeDrawer: (id: number, description: string) =>
     request<Drawer>(`/drawers/${id}`, { method: 'PATCH', body: json({ description }) }),
+  uploadDrawerImage: (id: number, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request<Drawer>(`/drawers/${id}/image`, { method: 'POST', body: form })
+  },
+  deleteDrawerImage: (id: number) =>
+    request<Drawer>(`/drawers/${id}/image`, { method: 'DELETE' }),
   renumber: (payload: RenumberInput) =>
     request<Drawer[]>('/drawers/renumber', { method: 'POST', body: json(payload) }),
 

@@ -495,6 +495,39 @@ button.link.danger {
   padding: 0 2px;
 }
 
+/* Miniatura ao fundo da gaveta. O texto fica por cima, com um véu para
+   continuar legível sobre fotos claras ou escuras. */
+.thumb-fundo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  z-index: 0;
+}
+
+.drawer.com-foto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, var(--surface) 100%);
+  opacity: 0.75;
+  z-index: 0;
+}
+
+.drawer.com-foto .rotulo,
+.drawer.com-foto .name,
+.drawer.com-foto .qty {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 3px var(--surface);
+}
+
+.drawer.com-foto:hover .thumb-fundo {
+  opacity: 0.85;
+}
+
 /* Barra de ocupação no rodapé da gaveta. */
 .drawer .fill {
   position: absolute;
@@ -589,6 +622,59 @@ button.link.danger {
 .muted {
   color: var(--muted);
   font-size: 13px;
+}
+
+.foto-gaveta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.foto-gaveta img,
+.foto-vazia {
+  width: 84px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.foto-vazia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.foto-acoes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.botao-arquivo {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.botao-arquivo:hover {
+  border-color: var(--accent);
+}
+
+.botao-arquivo input[type='file'] {
+  display: none;
 }
 
 .drawer-description {

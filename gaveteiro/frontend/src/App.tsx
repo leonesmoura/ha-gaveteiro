@@ -170,6 +170,15 @@ export function App() {
   // "Ver tudo": encolhe as gavetas até o gaveteiro inteiro caber na largura
   // disponível, para dar a visão geral sem rolagem horizontal.
   const [fit, setFit] = useState(false)
+
+  // Miniaturas são preferência de quem olha, não dado do gaveteiro: ficam no
+  // navegador para cada pessoa escolher no seu aparelho.
+  const [miniaturas, setMiniaturas] = useState(
+    () => localStorage.getItem('gaveteiro:miniaturas') !== 'off',
+  )
+  useEffect(() => {
+    localStorage.setItem('gaveteiro:miniaturas', miniaturas ? 'on' : 'off')
+  }, [miniaturas])
   const canvasRef = useRef<HTMLDivElement>(null)
   const scalerRef = useRef<HTMLDivElement>(null)
 
@@ -375,6 +384,12 @@ export function App() {
             {lowStock.length} p/ repor
           </button>
         )}
+        <button
+          onClick={() => setMiniaturas(!miniaturas)}
+          title={miniaturas ? 'Ocultar as fotos nas gavetas' : 'Mostrar as fotos nas gavetas'}
+        >
+          {miniaturas ? 'Sem fotos' : 'Com fotos'}
+        </button>
         <button onClick={() => setFit(!fit)} title="Ver o gaveteiro inteiro na tela">
           {fit ? 'Ampliar' : 'Ver tudo'}
         </button>
@@ -481,6 +496,7 @@ export function App() {
             selectedId={selected?.id ?? null}
             matchIds={matchIds}
             focusedId={gavetasEncontradas[indiceFoco]?.id ?? null}
+            showThumbs={miniaturas}
             onSelect={(drawer) => {
               setSelected(drawer)
               abrirPainel('drawer')

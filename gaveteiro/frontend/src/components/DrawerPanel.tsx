@@ -108,6 +108,39 @@ export function DrawerPanel({ drawerId, categories, allParts, onChanged }: Props
       </div>
 
       {!renaming && (
+        <div className="foto-gaveta">
+          {detail.image_path ? (
+            <img src={imageUrl(detail.image_path)} alt={`Foto da gaveta ${detail.label}`} />
+          ) : (
+            <div className="foto-vazia">sem foto</div>
+          )}
+          <div className="foto-acoes">
+            <label className="botao-arquivo">
+              {detail.own_image ? 'Trocar foto' : 'Foto da gaveta'}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  const arquivo = e.target.files?.[0]
+                  if (arquivo) run(() => api.uploadDrawerImage(drawerId, arquivo))
+                  e.target.value = ''
+                }}
+              />
+            </label>
+            {detail.own_image && (
+              <button className="link danger" onClick={() => run(() => api.deleteDrawerImage(drawerId))}>
+                remover
+              </button>
+            )}
+            {!detail.own_image && detail.image_path && (
+              <span className="muted">herdada da peça</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!renaming && (
         <input
           className="drawer-description"
           defaultValue={detail.description}

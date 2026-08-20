@@ -39,6 +39,17 @@ Ajuste ao seu gaveteiro real em **Configurar**:
 Depois, em **Numeração**, escolha como as gavetas são numeradas — com prévia
 antes de aplicar. Renumerar troca só os rótulos; o conteúdo não se move.
 
+## Fotos nas gavetas
+
+Cada gaveta mostra uma miniatura ao fundo. Sem configurar nada, ela herda a
+foto da primeira peça que tiver imagem. Para uma foto própria — útil quando a
+gaveta tem várias peças, ou para fotografar o conteúdo real — clique na gaveta
+e use **Foto da gaveta**; no celular abre direto a câmera. Remover a foto
+própria faz a gaveta voltar a herdar a da peça.
+
+O botão **Sem fotos** na barra superior desliga as miniaturas. É preferência
+de cada navegador, não do gaveteiro.
+
 ## Numeração
 
 | Modo | Como conta |

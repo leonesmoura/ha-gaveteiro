@@ -1,20 +1,15 @@
 """Peças, categorias e imagens."""
 
-import uuid
-
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from PIL import Image
 from sqlmodel import Session, select
 
-from .. import config
+from .. import images
 from ..db import get_session
 from ..models import Category, Part, PartTag, Stock
 from ..queries import part_out
 from ..schemas import CategoryIn, CategoryOut, PartIn, PartOut, PartUpdate
 
 router = APIRouter()
-
-ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 
 @router.get("/categories", response_model=list[CategoryOut])
@@ -89,8 +84,7 @@ def delete_part(part_id: int, session: Session = Depends(get_session)):
     for link in session.exec(select(PartTag).where(PartTag.part_id == part_id)).all():
         session.delete(link)
 
-    if part.image_path:
-        (config.IMAGES_DIR / part.image_path).unlink(missing_ok=True)
+    images.remover(part.image_path)
 
     session.delete(part)
     session.commit()
@@ -105,28 +99,12 @@ async def upload_image(
     part = session.get(Part, part_id)
     if part is None:
         raise HTTPException(404, "Peça não encontrada")
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
-        raise HTTPException(415, f"Tipo não suportado: {file.content_type}")
 
-    config.ensure_dirs()
-    filename = f"{uuid.uuid4().hex}.webp"
-    target = config.IMAGES_DIR / filename
-
-    try:
-        image = Image.open(file.file)
-        image = image.convert("RGB")
-        image.thumbnail((config.IMAGE_MAX_SIZE, config.IMAGE_MAX_SIZE))
-        image.save(target, "WEBP", quality=85)
-    except OSError as exc:
-        raise HTTPException(400, f"Imagem inválida: {exc}") from exc
-
-    old = part.image_path
-    part.image_path = filename
+    antiga = part.image_path
+    part.image_path = images.salvar(file)
     session.add(part)
     session.commit()
     session.refresh(part)
 
-    if old:
-        (config.IMAGES_DIR / old).unlink(missing_ok=True)
-
+    images.remover(antiga)
     return part_out(session, part)
