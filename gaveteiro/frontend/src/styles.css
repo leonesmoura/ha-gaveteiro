@@ -600,12 +600,55 @@ button.link.danger {
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
 }
 
 .panel-header h2 {
   margin: 0;
   font-size: 18px;
+}
+
+/* Número em destaque, com a descrição logo abaixo como subtítulo. */
+.titulo-gaveta {
+  flex: 1;
+  text-align: center;
+}
+
+.titulo-gaveta h2 {
+  font-size: 34px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Parece texto, vira campo ao focar — editar sem precisar de outro botão. */
+.subtitulo {
+  margin-top: 2px;
+  padding: 2px 6px;
+  font-size: 15px;
+  text-align: center;
+  background: none;
+  border-color: transparent;
+}
+
+.subtitulo:hover {
+  border-color: var(--border);
+}
+
+.subtitulo:focus {
+  background: var(--bg);
+}
+
+.subtitulo::placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.resumo-gaveta {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2px;
 }
 
 .muted {
@@ -664,13 +707,6 @@ button.link.danger {
 
 .botao-arquivo input[type='file'] {
   display: none;
-}
-
-.drawer-description {
-  margin-bottom: 10px;
-  font-size: 13px;
-  background: transparent;
-  border-style: dashed;
 }
 
 .card {

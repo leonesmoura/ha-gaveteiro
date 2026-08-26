@@ -79,31 +79,39 @@ export function DrawerPanel({ drawerId, categories, allParts, onChanged }: Props
             </button>
           </form>
         ) : (
-          <>
-            <h2>
-              {detail.label}{' '}
+          <div className="titulo-gaveta">
+            <h2>{detail.label}</h2>
+            <input
+              className="subtitulo"
+              defaultValue={detail.description}
+              placeholder="o que vai aqui?"
+              aria-label="Descrição da gaveta"
+              onBlur={(e) => {
+                const texto = e.target.value.trim()
+                if (texto !== detail.description) run(() => api.describeDrawer(drawerId, texto))
+              }}
+            />
+            <div className="resumo-gaveta">
+              <span className="muted">
+                {detail.part_count === 0 ? 'vazia' : `${detail.part_count} peça(s) · `}
+                {detail.part_count > 0 && (
+                  <>
+                    <NumeroAnimado valor={detail.total_quantity} /> un.
+                  </>
+                )}
+              </span>
               <button
                 className="link"
                 onClick={() => {
                   setNovoRotulo(detail.label)
                   setRenaming(true)
                 }}
-                title="Renomear esta gaveta"
+                title="Mudar o número desta gaveta"
               >
-                renomear
+                renumerar
               </button>
-            </h2>
-            <span className="muted">
-              {detail.part_count === 0
-                ? 'vazia'
-                : `${detail.part_count} peça(s) · `}
-            {detail.part_count > 0 && (
-              <>
-                <NumeroAnimado valor={detail.total_quantity} /> un.
-              </>
-            )}
-            </span>
-          </>
+            </div>
+          </div>
         )}
       </div>
 
@@ -138,19 +146,6 @@ export function DrawerPanel({ drawerId, categories, allParts, onChanged }: Props
             )}
           </div>
         </div>
-      )}
-
-      {!renaming && (
-        <input
-          className="drawer-description"
-          defaultValue={detail.description}
-          placeholder="Para que serve esta gaveta? (ex.: Cap. Poliester)"
-          aria-label="Descrição da gaveta"
-          onBlur={(e) => {
-            const texto = e.target.value.trim()
-            if (texto !== detail.description) run(() => api.describeDrawer(drawerId, texto))
-          }}
-        />
       )}
 
       {error && <div className="error">{error}</div>}

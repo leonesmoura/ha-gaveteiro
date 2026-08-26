@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.2
+
+- Painel da gaveta com o número em destaque e a descrição como subtítulo
+  logo abaixo; a descrição segue editável no próprio lugar
+
 ## 1.8.1
 
 - A miniatura passa a ser um ícone pequeno acima do número, em vez de ocupar
